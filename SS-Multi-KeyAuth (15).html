@@ -1,0 +1,1706 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SS Tools Hub</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+
+<style>
+:root {
+    --bg: #070b14;
+    --surface: #0d1525;
+    --surface2: #111d35;
+    --border: #1e3a5f;
+    --accent: #00d4ff;
+    --accent2: #0099cc;
+    --green: #00ff88;
+    --red: #ff3b5c;
+    --text: #cde4ff;
+    --muted: #4a6a8a;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    font-family: 'Rajdhani', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+/* Grid bg effect */
+body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+        linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* === LOCK SCREEN === */
+#lockScreen {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.lock-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 48px 40px;
+    width: 100%;
+    max-width: 440px;
+    box-shadow: 0 0 60px rgba(0,212,255,0.06), 0 0 120px rgba(0,212,255,0.02);
+    position: relative;
+    overflow: hidden;
+}
+
+.lock-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+}
+
+.lock-logo {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    opacity: 0.7;
+}
+
+.lock-title {
+    font-size: 32px;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 6px;
+}
+
+.lock-sub {
+    font-size: 14px;
+    color: var(--muted);
+    font-family: 'JetBrains Mono', monospace;
+    margin-bottom: 36px;
+}
+
+.field-label {
+    font-size: 12px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.key-input-wrap {
+    position: relative;
+}
+
+.key-input-wrap input {
+    width: 100%;
+    padding: 14px 44px 14px 16px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: white;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    letter-spacing: 1px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.key-input-wrap input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(0,212,255,0.1);
+}
+
+.toggle-key {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 16px;
+    padding: 0;
+    width: auto;
+}
+
+.btn-unlock {
+    margin-top: 20px;
+    width: 100%;
+    padding: 14px;
+    background: var(--accent);
+    color: var(--bg);
+    border: none;
+    border-radius: 8px;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-unlock:hover {
+    background: white;
+    box-shadow: 0 0 24px rgba(0,212,255,0.4);
+}
+
+.btn-unlock:active { transform: scale(0.98); }
+
+.btn-unlock.loading {
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+.error-msg {
+    margin-top: 14px;
+    font-size: 13px;
+    color: var(--red);
+    font-family: 'JetBrains Mono', monospace;
+    min-height: 18px;
+    text-align: center;
+}
+
+
+
+
+
+/* === MAIN CONTENT === */
+#mainContent {
+    display: none;
+    position: relative;
+    z-index: 1;
+    padding: 40px 20px;
+    max-width: 700px;
+    margin: 0 auto;
+}
+
+.hub-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 40px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+}
+
+.hub-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: white;
+}
+
+.hub-title span { color: var(--accent); }
+
+.user-info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+}
+
+.user-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: white;
+}
+
+.expiry-info {
+    font-size: 11px;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--muted);
+}
+
+.tools-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 16px;
+}
+
+.tool-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px 20px;
+    cursor: pointer;
+    text-align: left;
+    transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+    position: relative;
+    overflow: hidden;
+    display: block;
+    width: 100%;
+}
+
+.tool-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(0,212,255,0.05), transparent);
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.tool-btn:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(0,212,255,0.12);
+}
+
+.tool-btn:hover::before { opacity: 1; }
+
+.tool-icon {
+    font-size: 28px;
+    margin-bottom: 12px;
+    display: block;
+}
+
+.tool-name {
+    font-size: 17px;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 4px;
+}
+
+.tool-desc {
+    font-size: 12px;
+    color: var(--muted);
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.soon-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(7,11,20,0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    text-transform: uppercase;
+    font-family: 'JetBrains Mono', monospace;
+    backdrop-filter: blur(2px);
+}
+
+/* === WEBHOOK PAGE === */
+#webhookPage {
+    display: none;
+    position: relative;
+    z-index: 1;
+    padding: 20px;
+}
+
+.page-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    max-width: 680px;
+    margin: 0 auto 32px;
+}
+
+.btn-back {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    padding: 10px 16px;
+    cursor: pointer;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    transition: border-color 0.2s;
+    width: auto;
+    display: inline-block;
+}
+
+.btn-back:hover { border-color: var(--accent); color: var(--accent); }
+
+.page-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: white;
+}
+
+.wh-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px;
+    max-width: 680px;
+    margin: 0 auto;
+}
+
+.form-group {
+    margin-bottom: 18px;
+}
+
+.form-group label {
+    display: block;
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    text-transform: uppercase;
+    font-family: 'JetBrains Mono', monospace;
+    margin-bottom: 8px;
+}
+
+.form-group input,
+.form-group textarea {
+    width: 100%;
+    padding: 12px 14px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: white;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.2s;
+    resize: vertical;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+    border-color: var(--accent);
+}
+
+.form-group input[type="color"] {
+    height: 42px;
+    padding: 4px 8px;
+    cursor: pointer;
+}
+
+.divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 24px 0;
+}
+
+.section-label {
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: var(--accent);
+    text-transform: uppercase;
+    font-family: 'JetBrains Mono', monospace;
+    margin-bottom: 16px;
+    opacity: 0.7;
+}
+
+.two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.btn-send {
+    width: 100%;
+    padding: 14px;
+    background: var(--green);
+    color: var(--bg);
+    border: none;
+    border-radius: 8px;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    cursor: pointer;
+    margin-top: 8px;
+    transition: background 0.2s, box-shadow 0.2s;
+}
+
+.btn-send:hover {
+    background: white;
+    box-shadow: 0 0 24px rgba(0,255,136,0.3);
+}
+
+/* Preview */
+.preview-label {
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: var(--muted);
+    text-transform: uppercase;
+    font-family: 'JetBrains Mono', monospace;
+    margin-bottom: 12px;
+    margin-top: 24px;
+}
+
+.discord-preview {
+    background: #313338;
+    border-radius: 8px;
+    padding: 16px;
+    min-height: 60px;
+    font-family: 'gg sans', 'Noto Sans', sans-serif;
+    font-size: 14px;
+}
+
+.preview-message {
+    color: #dbdee1;
+    margin-bottom: 8px;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.preview-embed {
+    background: #2b2d31;
+    border-radius: 4px;
+    overflow: hidden;
+    display: flex;
+    gap: 12px;
+    padding: 12px;
+}
+
+.preview-embed-bar {
+    width: 4px;
+    border-radius: 2px;
+    flex-shrink: 0;
+}
+
+.preview-embed-content { flex: 1; }
+
+.preview-embed-title {
+    color: white;
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+
+.preview-embed-desc {
+    color: #b5bac1;
+    font-size: 13px;
+    white-space: pre-wrap;
+}
+
+.preview-embed-img {
+    max-width: 100%;
+    border-radius: 4px;
+    margin-top: 8px;
+}
+
+.preview-thumb {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 4px;
+    flex-shrink: 0;
+}
+
+.toast {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 20px;
+    font-size: 14px;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--green);
+    z-index: 999;
+    transform: translateY(80px);
+    opacity: 0;
+    transition: transform 0.3s, opacity 0.3s;
+    pointer-events: none;
+}
+
+.toast.show {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+.toast.error { color: var(--red); }
+</style>
+</head>
+<body>
+
+<div id="toastEl" class="toast"></div>
+
+<!-- 🔐 LOCK SCREEN -->
+<div id="lockScreen">
+    <div class="lock-card">
+        <div class="lock-logo">SS Tools</div>
+        <div class="lock-title">Access Hub</div>
+        <div class="lock-sub">// authenticate to continue</div>
+
+        <div class="field-label">License Key</div>
+        <div class="key-input-wrap">
+            <input type="password" id="keyInput" placeholder="XXXX-XXXX-XXXX-XXXX" autocomplete="off">
+            <button class="toggle-key" onclick="toggleKeyVis()" title="Toggle visibility">👁</button>
+        </div>
+
+        <button class="btn-unlock" id="unlockBtn" onclick="checkKey()">
+            Authenticate
+        </button>
+
+        <div class="error-msg" id="errorMsg"></div>
+
+
+    </div>
+</div>
+
+<!-- MAIN HUB -->
+<div id="mainContent">
+    <div class="hub-header">
+        <div>
+            <div class="hub-title"><span>SS</span> Tools Hub</div>
+        </div>
+        <div class="user-info">
+            <div class="user-name" id="hubUser"></div>
+
+        </div>
+    </div>
+
+    <div class="tools-grid">
+        <button class="tool-btn" onclick="showPage('webhookPage')">
+            <span class="tool-icon">🔗</span>
+            <div class="tool-name">Webhook Bot</div>
+            <div class="tool-desc">Discord webhook sender</div>
+        </button>
+        <button class="tool-btn" onclick="showPage('logoPage')">
+            <span class="tool-icon">✨</span>
+            <div class="tool-name">Logo Generator</div>
+            <div class="tool-desc">AI + custom logo maker</div>
+        </button>
+        <button class="tool-btn" onclick="showPage('fivemPage')">
+            <span class="tool-icon">🎮</span>
+            <div class="tool-name">FiveM Scripter</div>
+            <div class="tool-desc">AI Lua script generator</div>
+        </button>
+        <button class="tool-btn" onclick="showPage('robloxPage')">
+            <span class="tool-icon">🟥</span>
+            <div class="tool-name">Roblox Scripter</div>
+            <div class="tool-desc">AI Luau script generator</div>
+        </button>
+    </div>
+</div>
+
+<!-- WEBHOOK PAGE -->
+<div id="webhookPage">
+    <div class="page-header">
+        <button class="btn-back" onclick="showPage('mainContent')">← Back</button>
+        <div class="page-title">Webhook Bot</div>
+    </div>
+
+    <div class="wh-card">
+        <div class="form-group">
+            <label>Webhook URL</label>
+            <input type="text" id="webhookUrl" placeholder="https://discord.com/api/webhooks/...">
+        </div>
+
+        <div class="form-group">
+            <label>Message</label>
+            <textarea id="message" rows="3" placeholder="Your message here..." oninput="updatePreview()"></textarea>
+        </div>
+
+        <hr class="divider">
+        <div class="section-label">Embed</div>
+
+        <div class="form-group">
+            <label>Title</label>
+            <input type="text" id="embedTitle" placeholder="Embed title" oninput="updatePreview()">
+        </div>
+
+        <div class="form-group">
+            <label>Description</label>
+            <textarea id="embedDesc" rows="3" placeholder="Embed description..." oninput="updatePreview()"></textarea>
+        </div>
+
+        <div class="two-col">
+            <div class="form-group">
+                <label>Accent Color</label>
+                <input type="color" id="embedColor" value="#5865f2" oninput="updatePreview()">
+            </div>
+        </div>
+
+        <div class="two-col">
+            <div class="form-group">
+                <label>Image URL</label>
+                <input type="text" id="embedImage" placeholder="https://..." oninput="updatePreview()">
+            </div>
+            <div class="form-group">
+                <label>Thumbnail URL</label>
+                <input type="text" id="embedThumb" placeholder="https://..." oninput="updatePreview()">
+            </div>
+        </div>
+
+        <button class="btn-send" onclick="sendWebhook()">⚡ Send Message</button>
+
+        <div class="preview-label">Preview</div>
+        <div class="discord-preview" id="previewBox">
+            <div class="preview-message" style="color:var(--muted);font-size:12px;font-family:'JetBrains Mono',monospace;">// preview will appear here</div>
+        </div>
+    </div>
+</div>
+
+<script>
+// ============================================================
+//  ⚙️  KEYAUTH CONFIG — vul jouw gegevens in
+// ============================================================
+const KEYAUTH_APP = {
+    name:    "Goudaroleplay321's Application",
+    ownerid: "tD9rgv3sHi",
+    version: "1.0"
+};
+// ============================================================
+
+let currentUser = null;
+let currentPage = 'lockScreen';
+
+function showPage(pageId) {
+    ['lockScreen','mainContent','webhookPage','logoPage','fivemPage','robloxPage'].forEach(id => {
+        document.getElementById(id).style.display = 'none';
+    });
+    document.getElementById(pageId).style.display = 'block';
+    currentPage = pageId;
+    if (pageId === 'fivemPage')  initFivem();
+    if (pageId === 'robloxPage') initRoblox();
+}
+
+function toggleKeyVis() {
+    const inp = document.getElementById('keyInput');
+    inp.type = inp.type === 'password' ? 'text' : 'password';
+}
+
+/* ─────────────────────────────────────────
+   KeyAuth initSession → dan checkKey
+───────────────────────────────────────── */
+// ============================================================
+//  🌐 CLOUDFLARE WORKER URL — plak hier jouw worker URL
+//  (zie keyauth-worker.js voor setup instructies)
+// ============================================================
+const WORKER_URL = "https://ss-scripts.goudaroleplay321.workers.dev";
+// ============================================================
+
+async function proxyKeyAuth(params) {
+    const url = WORKER_URL + "?" + new URLSearchParams(params).toString();
+    const res = await fetch(url);
+    if (!res.ok) throw new Error("Worker HTTP " + res.status);
+    return await res.json();
+}
+
+async function checkKey() {
+    const key = document.getElementById('keyInput').value.trim();
+    const btn = document.getElementById('unlockBtn');
+    const errEl = document.getElementById('errorMsg');
+
+    if (!key) {
+        errEl.textContent = 'Voer een key in.';
+        return;
+    }
+
+    errEl.textContent = '';
+    btn.textContent = 'Checking...';
+    btn.classList.add('loading');
+
+    try {
+        // 1. Init session via worker
+        const initData = await proxyKeyAuth({
+            type: 'init',
+            ver: KEYAUTH_APP.version,
+            name: KEYAUTH_APP.name,
+            ownerid: KEYAUTH_APP.ownerid
+        });
+
+        if (!initData.success) throw new Error(initData.message || 'Init mislukt');
+        const sessionid = initData.sessionid;
+
+        // 2. License check via worker
+        const licData = await proxyKeyAuth({
+            type: 'license',
+            key: key,
+            sessionid: sessionid,
+            name: KEYAUTH_APP.name,
+            ownerid: KEYAUTH_APP.ownerid
+        });
+
+        if (licData.success) {
+            handleSuccess(licData);
+        } else {
+            errEl.textContent = licData.message || 'Ongeldige key.';
+        }
+    } catch (e) {
+        errEl.textContent = 'Verbindingsfout: ' + e.message;
+    } finally {
+        btn.textContent = 'Authenticate';
+        btn.classList.remove('loading');
+    }
+}
+
+function handleSuccess(data) {
+    const info = data.info || {};
+    const username  = info.username  || 'Gebruiker';
+    const expiry    = info.expiry    || null;
+    const subType   = detectSubType(info);
+
+    currentUser = { username, expiry, subType };
+
+    // Na 1s naar hub
+    setTimeout(() => {
+        const hubUser = document.getElementById('hubUser');
+        if (hubUser) hubUser.textContent = username;
+        showPage('mainContent');
+    }, 900);
+}
+
+/* Detect sub type from KeyAuth subscription info */
+function detectSubType(info) {
+    const expiry = info.expiry ? parseInt(info.expiry) : null;
+    if (!expiry || expiry <= 0) return 'lifetime';
+    const daysLeft = Math.ceil((expiry * 1000 - Date.now()) / 86400000);
+    if (daysLeft <= 31)  return 'days';
+    if (daysLeft <= 366) return 'month';
+    return 'lifetime';
+}
+
+function formatExpiry(unixTimestamp) {
+    const d = new Date(unixTimestamp * 1000);
+    return d.toLocaleDateString('nl-NL', { day:'2-digit', month:'2-digit', year:'numeric' });
+}
+
+/* Enter key support */
+document.getElementById('keyInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') checkKey();
+});
+
+/* ─────────────────────────────────────────
+   WEBHOOK
+───────────────────────────────────────── */
+async function sendWebhook() {
+    const webhook = document.getElementById('webhookUrl').value.trim();
+    const msg     = document.getElementById('message').value;
+    const title   = document.getElementById('embedTitle').value;
+    const desc    = document.getElementById('embedDesc').value;
+    const color   = document.getElementById('embedColor').value;
+    const img     = document.getElementById('embedImage').value;
+    const thumb   = document.getElementById('embedThumb').value;
+
+    if (!webhook) { showToast('Voer een webhook URL in', true); return; }
+
+    const body = {
+        content: msg || undefined,
+        embeds: (title || desc || img || thumb) ? [{
+            title: title || undefined,
+            description: desc || undefined,
+            color: parseInt(color.replace('#',''), 16),
+            image: img   ? { url: img }   : undefined,
+            thumbnail: thumb ? { url: thumb } : undefined
+        }] : undefined
+    };
+
+    try {
+        const res = await fetch(webhook, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        });
+        if (res.ok || res.status === 204) {
+            showToast('✓ Bericht verzonden');
+        } else {
+            showToast('Discord fout: ' + res.status, true);
+        }
+    } catch (e) {
+        showToast('Fout: ' + e.message, true);
+    }
+}
+
+function updatePreview() {
+    const msg   = document.getElementById('message').value;
+    const title = document.getElementById('embedTitle').value;
+    const desc  = document.getElementById('embedDesc').value;
+    const color = document.getElementById('embedColor').value;
+    const img   = document.getElementById('embedImage').value;
+    const thumb = document.getElementById('embedThumb').value;
+
+    let html = '';
+    if (msg) {
+        html += `<div class="preview-message">${esc(msg)}</div>`;
+    }
+    if (title || desc || img || thumb) {
+        html += `
+        <div class="preview-embed" style="border-left:4px solid ${color}">
+            <div class="preview-embed-content">
+                ${title ? `<div class="preview-embed-title">${esc(title)}</div>` : ''}
+                ${desc  ? `<div class="preview-embed-desc">${esc(desc)}</div>`   : ''}
+                ${img   ? `<img class="preview-embed-img" src="${esc(img)}">`    : ''}
+            </div>
+            ${thumb ? `<img class="preview-thumb" src="${esc(thumb)}">` : ''}
+        </div>`;
+    }
+
+    document.getElementById('previewBox').innerHTML = html || '<div class="preview-message" style="color:var(--muted);font-size:12px;font-family:JetBrains Mono,monospace;">// preview will appear here</div>';
+}
+
+function esc(t) {
+    return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+}
+
+function showToast(msg, isErr = false) {
+    const t = document.getElementById('toastEl');
+    t.textContent = msg;
+    t.className = 'toast' + (isErr ? ' error' : '') + ' show';
+    setTimeout(() => { t.classList.remove('show'); }, 3000);
+}
+</script>
+
+<!-- LOGO PAGE -->
+<div id="logoPage" style="display:none; position:relative; z-index:1; padding:20px;">
+    <div class="page-header">
+        <button class="btn-back" onclick="showPage('mainContent')">← Back</button>
+        <div class="page-title">Logo Generator</div>
+    </div>
+
+    <div style="max-width:800px; margin:0 auto; display:grid; grid-template-columns:1fr 1fr; gap:20px;">
+
+        <!-- LEFT: Controls -->
+        <div class="wh-card" style="display:flex; flex-direction:column; gap:14px;">
+
+            <hr class="divider" style="margin-top:0;">
+            <div class="section-label">Handmatig Aanpassen</div>
+
+            <div class="form-group">
+                <label>Logo Tekst</label>
+                <input type="text" id="logoText" placeholder="SS Tools" oninput="renderLogo()">
+            </div>
+
+            <div class="form-group">
+                <label>Subtitel</label>
+                <input type="text" id="logoSub" placeholder="By goudaroleplay" oninput="renderLogo()">
+            </div>
+
+            <div class="two-col">
+                <div class="form-group">
+                    <label>Tekst Kleur</label>
+                    <input type="color" id="logoColor" value="#00d4ff" oninput="renderLogo()">
+                </div>
+                <div class="form-group">
+                    <label>Achtergrond</label>
+                    <input type="color" id="logoBg" value="#070b14" oninput="renderLogo()">
+                </div>
+            </div>
+
+            <div class="two-col">
+                <div class="form-group">
+                    <label>Accent Kleur</label>
+                    <input type="color" id="logoAccent" value="#00ff88" oninput="renderLogo()">
+                </div>
+                <div class="form-group">
+                    <label>Lettertype</label>
+                    <select id="logoFont" onchange="renderLogo()" style="width:100%;padding:12px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:white;font-size:13px;outline:none;">
+                        <option value="Rajdhani">Rajdhani</option>
+                        <option value="JetBrains Mono">JetBrains Mono</option>
+                        <option value="Impact">Impact</option>
+                        <option value="Arial Black">Arial Black</option>
+                        <option value="Georgia">Georgia</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Stijl</label>
+                <select id="logoStyle" onchange="renderLogo()" style="width:100%;padding:12px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:white;font-size:13px;outline:none;">
+                    <option value="cyber">Cyber / Neon</option>
+                    <option value="minimal">Minimaal</option>
+                    <option value="glitch">Glitch</option>
+                    <option value="gradient">Gradient</option>
+                    <option value="box">Box / Badge</option>
+                </select>
+            </div>
+
+            <button class="btn-send" onclick="downloadLogo()">⬇ Download PNG</button>
+        </div>
+
+        <!-- RIGHT: Preview -->
+        <div style="display:flex; flex-direction:column; gap:12px;">
+            <div class="section-label">Preview</div>
+            <div style="background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:20px; display:flex; align-items:center; justify-content:center; min-height:300px; position:relative;">
+                <canvas id="logoCanvas" width="500" height="250" style="max-width:100%; border-radius:8px;"></canvas>
+                <div id="logoSpinner" style="display:none; position:absolute; inset:0; align-items:center; justify-content:center; background:rgba(7,11,20,0.8); border-radius:12px; font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--accent);">
+                    AI genereert logo...
+                </div>
+            </div>
+            <div id="aiResult" style="background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:14px; font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--muted); min-height:60px; white-space:pre-wrap; display:none;"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+// ── Logo Generator ──────────────────────────────────────────
+
+function renderLogo() {
+    const canvas = document.getElementById('logoCanvas');
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width, H = canvas.height;
+
+    const text    = document.getElementById('logoText').value    || 'SS Tools';
+    const sub     = document.getElementById('logoSub').value     || '';
+    const color   = document.getElementById('logoColor').value   || '#00d4ff';
+    const bg      = document.getElementById('logoBg').value      || '#070b14';
+    const accent  = document.getElementById('logoAccent').value  || '#00ff88';
+    const font    = document.getElementById('logoFont').value    || 'Rajdhani';
+    const style   = document.getElementById('logoStyle').value   || 'cyber';
+
+    ctx.clearRect(0, 0, W, H);
+
+    // Background
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, W, H);
+
+    if (style === 'cyber') {
+        // Grid lines
+        ctx.strokeStyle = 'rgba(0,212,255,0.06)';
+        ctx.lineWidth = 1;
+        for (let x = 0; x < W; x += 20) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke(); }
+        for (let y = 0; y < H; y += 20) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
+        // Accent lines
+        ctx.strokeStyle = accent;
+        ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(0, H-4); ctx.lineTo(W, H-4); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(0, 4);   ctx.lineTo(W, 4);   ctx.stroke();
+        // Main text
+        ctx.font = `bold 72px ${font}`;
+        ctx.textAlign = 'center';
+        ctx.shadowColor = color;
+        ctx.shadowBlur = 20;
+        ctx.fillStyle = color;
+        ctx.fillText(text, W/2, H/2 + 20);
+        ctx.shadowBlur = 0;
+        if (sub) {
+            ctx.font = `16px JetBrains Mono`;
+            ctx.fillStyle = accent;
+            ctx.fillText(sub, W/2, H/2 + 52);
+        }
+
+    } else if (style === 'minimal') {
+        ctx.font = `bold 68px ${font}`;
+        ctx.textAlign = 'center';
+        ctx.fillStyle = color;
+        ctx.fillText(text, W/2, H/2 + 20);
+        if (sub) {
+            ctx.font = `16px ${font}`;
+            ctx.fillStyle = accent;
+            ctx.fillText(sub, W/2, H/2 + 52);
+        }
+        ctx.fillStyle = accent;
+        ctx.fillRect(W/2 - 40, H/2 + 62, 80, 2);
+
+    } else if (style === 'glitch') {
+        // Glitch offset layers
+        ctx.globalAlpha = 0.4;
+        ctx.fillStyle = '#ff003c';
+        ctx.font = `bold 72px ${font}`;
+        ctx.textAlign = 'center';
+        ctx.fillText(text, W/2 + 4, H/2 + 22);
+        ctx.fillStyle = '#00fff9';
+        ctx.fillText(text, W/2 - 4, H/2 + 18);
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = color;
+        ctx.fillText(text, W/2, H/2 + 20);
+        if (sub) {
+            ctx.font = `16px JetBrains Mono`;
+            ctx.fillStyle = accent;
+            ctx.fillText(sub, W/2, H/2 + 52);
+        }
+
+    } else if (style === 'gradient') {
+        const grad = ctx.createLinearGradient(0, 0, W, 0);
+        grad.addColorStop(0, color);
+        grad.addColorStop(1, accent);
+        ctx.font = `bold 72px ${font}`;
+        ctx.textAlign = 'center';
+        ctx.fillStyle = grad;
+        ctx.fillText(text, W/2, H/2 + 20);
+        if (sub) {
+            ctx.font = `16px ${font}`;
+            ctx.fillStyle = accent;
+            ctx.fillText(sub, W/2, H/2 + 52);
+        }
+
+    } else if (style === 'box') {
+        // Badge box
+        const pad = 20;
+        ctx.font = `bold 64px ${font}`;
+        ctx.textAlign = 'center';
+        const tw = ctx.measureText(text).width;
+        const bx = W/2 - tw/2 - pad, by = H/2 - 50, bw = tw + pad*2, bh = 70;
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 3;
+        ctx.strokeRect(bx, by, bw, bh);
+        ctx.fillStyle = color + '18';
+        ctx.fillRect(bx, by, bw, bh);
+        ctx.fillStyle = color;
+        ctx.fillText(text, W/2, H/2 + 14);
+        if (sub) {
+            ctx.font = `14px JetBrains Mono`;
+            ctx.fillStyle = accent;
+            ctx.fillText(sub, W/2, H/2 + 52);
+        }
+    }
+}
+
+function downloadLogo() {
+    const canvas = document.getElementById('logoCanvas');
+    const a = document.createElement('a');
+    a.download = 'logo.png';
+    a.href = canvas.toDataURL('image/png');
+    a.click();
+}
+
+async function generateAILogo() {
+    const prompt = document.getElementById('aiPrompt').value.trim();
+    if (!prompt) { showToast('Vul een beschrijving in', true); return; }
+
+    const spinner = document.getElementById('logoSpinner');
+    const resultBox = document.getElementById('aiResult');
+    spinner.style.display = 'flex';
+    resultBox.style.display = 'none';
+
+    try {
+        const res = await fetch(WORKER_URL + "?type=ai", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                prompt: `Je bent een logo designer. De gebruiker wil een logo met deze omschrijving: "${prompt}". Geef ALLEEN een JSON terug (geen uitleg, geen markdown) met deze velden: {"text":"hoofd tekst voor het logo (max 12 tekens)","sub":"subtitel (max 30 tekens, mag leeg zijn)","style":"cyber of minimal of glitch of gradient of box","colorHex":"#hexkleur voor hoofdtekst","accentHex":"#hexkleur voor accent","bgHex":"#hexkleur voor achtergrond (donker)"}`
+            })
+        });
+
+        const data = await res.json();
+        const raw = data.content?.[0]?.text || '{}';
+        // Strip markdown code blocks if present
+        const clean = raw.replace(/```json|```/g, '').trim();
+        // Find JSON object in response
+        const jsonMatch = clean.match(/\{[\s\S]*\}/);
+        if (!jsonMatch) throw new Error('Geen JSON in AI response: ' + raw);
+        const parsed = JSON.parse(jsonMatch[0]);
+
+        // Apply AI suggestions to controls
+        document.getElementById('logoText').value    = parsed.text      || 'SS Tools';
+        document.getElementById('logoSub').value     = parsed.sub       || '';
+        document.getElementById('logoStyle').value   = parsed.style     || 'cyber';
+        document.getElementById('logoColor').value   = parsed.colorHex  || '#00d4ff';
+        document.getElementById('logoAccent').value  = parsed.accentHex || '#00ff88';
+        document.getElementById('logoBg').value      = parsed.bgHex     || '#070b14';
+
+        renderLogo();
+        showToast('✓ AI logo gegenereerd!');
+
+    } catch(e) {
+        showToast('AI fout: ' + e.message, true);
+    } finally {
+        spinner.style.display = 'none';
+    }
+}
+
+// Init logo on page load
+setTimeout(renderLogo, 100);
+</script>
+
+
+<!-- FIVEM PAGE -->
+<div id="fivemPage" style="display:none; position:relative; z-index:1; padding:20px; max-width:1100px; margin:0 auto;">
+    <div class="page-header">
+        <button class="btn-back" onclick="showPage('mainContent')">← Back</button>
+        <div class="page-title">🎮 FiveM Scripter AI</div>
+    </div>
+
+    <div style="display:grid; grid-template-columns:260px 1fr; gap:16px; align-items:start;">
+
+        <!-- Sidebar -->
+        <div style="display:flex; flex-direction:column; gap:12px;">
+
+            <div class="wh-card" style="padding:16px;">
+                <div class="section-label" style="margin-bottom:12px;">Modus</div>
+                <div style="display:flex; flex-direction:column; gap:8px;">
+                    <button class="mode-btn active" id="modeGen"   onclick="setMode('gen')">⚡ Genereer Script</button>
+                    <button class="mode-btn"         id="modeDebug" onclick="setMode('debug')">🔍 Debug / Fix</button>
+                    <button class="mode-btn"         id="modeClean" onclick="setMode('clean')">🧹 Clean Script</button>
+                    <button class="mode-btn"         id="modeChat"  onclick="setMode('chat')">💬 Chat / Vragen</button>
+                </div>
+            </div>
+
+            <div class="wh-card" style="padding:16px;" id="optionsPanel">
+                <div class="section-label" style="margin-bottom:12px;">Opties</div>
+                <div class="form-group">
+                    <label>Framework</label>
+                    <select id="fwSelect" style="width:100%;padding:10px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:white;font-size:13px;outline:none;">
+                        <option>ESX</option>
+                        <option>QBCore</option>
+                        <option>Standalone</option>
+                        <option>ox_core</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Side</label>
+                    <select id="sideSelect" style="width:100%;padding:10px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:white;font-size:13px;outline:none;">
+                        <option>Client + Server</option>
+                        <option>Client only</option>
+                        <option>Server only</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="wh-card" style="padding:16px;">
+                <div class="section-label" style="margin-bottom:8px;">Chat History</div>
+                <button onclick="clearChat()" style="width:100%;padding:8px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--muted);font-size:12px;cursor:pointer;font-family:'JetBrains Mono',monospace;">🗑 Wis gesprek</button>
+            </div>
+        </div>
+
+        <!-- Main -->
+        <div style="display:flex; flex-direction:column; gap:12px;">
+
+            <!-- Chat window -->
+            <div id="fivemChat" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;min-height:420px;max-height:420px;overflow-y:auto;display:flex;flex-direction:column;gap:12px;">
+                <div class="chat-msg ai" id="welcomeMsg">
+                    <div class="chat-bubble ai-bubble">👋 Hey! Ik ben je FiveM Lua AI. Kies een modus links en stel je vraag of plak je script!</div>
+                </div>
+            </div>
+
+            <!-- Input area -->
+            <div class="wh-card" style="padding:16px;">
+                <div class="form-group" id="inputGroup">
+                    <label id="inputLabel">Beschrijf je script</label>
+                    <textarea id="fivemInput" rows="4" placeholder="bijv. een script dat spelers geld geeft als ze op een ped praten..."></textarea>
+                </div>
+                <div class="form-group" id="codeGroup" style="display:none;">
+                    <label>Plak je Lua code</label>
+                    <textarea id="fivemCode" rows="6" placeholder="-- Plak hier je Lua code..." style="font-family:'JetBrains Mono',monospace; font-size:12px;"></textarea>
+                </div>
+                <button class="btn-send" id="fivemSendBtn" onclick="sendFivem()">⚡ Verstuur</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.mode-btn {
+    width: 100%;
+    padding: 10px 12px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--muted);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.2s;
+}
+.mode-btn.active {
+    background: rgba(0,212,255,0.1);
+    border-color: var(--accent);
+    color: var(--accent);
+}
+.chat-msg { display: flex; flex-direction: column; }
+.chat-bubble {
+    padding: 12px 16px;
+    border-radius: 10px;
+    font-size: 14px;
+    line-height: 1.5;
+    max-width: 90%;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+.ai-bubble {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    align-self: flex-start;
+    border-bottom-left-radius: 2px;
+}
+.user-bubble {
+    background: rgba(0,212,255,0.1);
+    border: 1px solid rgba(0,212,255,0.2);
+    color: white;
+    align-self: flex-end;
+    border-bottom-right-radius: 2px;
+}
+.code-block {
+    background: #0a0f1e;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: #a8d8ff;
+    overflow-x: auto;
+    margin-top: 8px;
+    position: relative;
+}
+.copy-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--muted);
+    font-size: 11px;
+    padding: 3px 8px;
+    cursor: pointer;
+    font-family: 'JetBrains Mono', monospace;
+}
+.copy-btn:hover { color: var(--accent); border-color: var(--accent); }
+.typing { color: var(--muted); font-family: 'JetBrains Mono', monospace; font-size: 12px; padding: 8px 0; }
+</style>
+
+<script>
+// ── FiveM Scripter ──────────────────────────────────────────
+let fivemMode = 'gen';
+let fivemHistory = [];
+
+function initFivem() {
+    setMode('gen');
+}
+
+function setMode(mode) {
+    fivemMode = mode;
+    ['gen','debug','clean','chat'].forEach(m => {
+        document.getElementById('mode' + m.charAt(0).toUpperCase() + m.slice(1)).classList.remove('active');
+    });
+    document.getElementById('mode' + mode.charAt(0).toUpperCase() + mode.slice(1)).classList.add('active');
+
+    const inputLabel  = document.getElementById('inputLabel');
+    const inputTA     = document.getElementById('fivemInput');
+    const codeGroup   = document.getElementById('codeGroup');
+    const optPanel    = document.getElementById('optionsPanel');
+
+    if (mode === 'gen') {
+        inputLabel.textContent = 'Beschrijf je script';
+        inputTA.placeholder = 'bijv. een script dat spelers geld geeft als ze op een ped praten...';
+        codeGroup.style.display = 'none';
+        optPanel.style.display = 'block';
+    } else if (mode === 'debug') {
+        inputLabel.textContent = 'Beschrijf het probleem (optioneel)';
+        inputTA.placeholder = 'bijv. de event triggert niet, of laat leeg...';
+        codeGroup.style.display = 'block';
+        optPanel.style.display = 'none';
+    } else if (mode === 'clean') {
+        inputLabel.textContent = 'Extra instructies (optioneel)';
+        inputTA.placeholder = 'bijv. voeg comments toe, optimaliseer loops...';
+        codeGroup.style.display = 'block';
+        optPanel.style.display = 'none';
+    } else if (mode === 'chat') {
+        inputLabel.textContent = 'Stel je vraag';
+        inputTA.placeholder = 'bijv. wat is het verschil tussen ESX en QBCore?';
+        codeGroup.style.display = 'none';
+        optPanel.style.display = 'none';
+    }
+}
+
+function buildSystemPrompt() {
+    const fw   = document.getElementById('fwSelect')?.value   || 'ESX';
+    const side = document.getElementById('sideSelect')?.value || 'Client + Server';
+
+    return `Je bent een expert FiveM Lua developer. Je schrijft altijd schone, goed gecommentarieerde Lua code voor FiveM servers.
+Framework voorkeur: ${fw}. Side: ${side}.
+- Gebruik altijd correcte FiveM natives
+- Voeg duidelijke comments toe in het Nederlands
+- Gebruik prints voor debugging waar nodig
+- Bij ESX gebruik ESX.GetPlayerData(), bij QBCore gebruik QBCore.Functions
+- Geef code altijd terug in een code block met \`\`\`lua ... \`\`\`
+- Wees beknopt maar volledig`;
+}
+
+async function sendFivem() {
+    const input    = document.getElementById('fivemInput').value.trim();
+    const code     = document.getElementById('fivemCode')?.value.trim() || '';
+    const btn      = document.getElementById('fivemSendBtn');
+
+    if (!input && !code) { showToast('Vul iets in!', true); return; }
+
+    let userMsg = '';
+    if (fivemMode === 'gen')   userMsg = `Genereer een FiveM Lua script: ${input}`;
+    if (fivemMode === 'debug') userMsg = `Debug en fix dit Lua script${input ? ': ' + input : ''}:
+
+${code}`;
+    if (fivemMode === 'clean') userMsg = `Clean en optimaliseer dit Lua script${input ? '. Extra: ' + input : ''}:
+
+${code}`;
+    if (fivemMode === 'chat')  userMsg = input;
+
+    addMessage(userMsg, 'user');
+    fivemHistory.push({ role: 'user', content: userMsg });
+
+    btn.textContent = '⏳ Bezig...';
+    btn.disabled = true;
+
+    const typingEl = addTyping();
+
+    try {
+        // Bouw history op zonder laatste user message (die sturen we apart)
+        const historyToSend = fivemHistory.slice(0, -1);
+
+        const res = await fetch(WORKER_URL + "?type=ai", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                prompt: userMsg,
+                system: buildSystemPrompt(),
+                history: historyToSend
+            })
+        });
+
+        if (!res.ok) throw new Error('Worker HTTP ' + res.status);
+        const data = await res.json();
+        console.log('Worker response:', JSON.stringify(data));
+        if (data.error) throw new Error('Worker error: ' + data.error);
+        if (data.type === 'error') throw new Error('Anthropic error: ' + (data.error?.message || JSON.stringify(data)));
+        const reply = data.content?.[0]?.text || 'Geen antwoord ontvangen.';
+
+        fivemHistory.push({ role: 'assistant', content: reply });
+        typingEl.remove();
+        addMessage(reply, 'ai');
+
+        // Clear inputs
+        document.getElementById('fivemInput').value = '';
+        if (document.getElementById('fivemCode')) document.getElementById('fivemCode').value = '';
+
+    } catch(e) {
+        typingEl.remove();
+        const errMsg = e?.message || JSON.stringify(e) || 'Onbekende fout';
+        addMessage('❌ Fout: ' + errMsg, 'ai');
+        console.error('FiveM AI error:', e);
+    } finally {
+        btn.textContent = '⚡ Verstuur';
+        btn.disabled = false;
+        scrollChat();
+    }
+}
+
+function addMessage(text, role) {
+    const chat = document.getElementById('fivemChat');
+    const div = document.createElement('div');
+    div.className = 'chat-msg';
+
+    // Split on code blocks
+    const codeBlockRe = /(`{3}lua[\s\S]*?`{3}|`{3}[\s\S]*?`{3})/g;    const parts = text.split(codeBlockRe);
+    let html = `<div class="chat-bubble ${role === 'ai' ? 'ai-bubble' : 'user-bubble'}">`;
+
+    parts.forEach(part => {
+        if (part.startsWith('`'+'`'+'`')) {
+            const code = part.replace(/```lua[\n]?|```[\n]?/g, '').trim();
+            const id = 'code_' + Math.random().toString(36).slice(2);
+            html += `</div><div class="code-block" id="${id}"><button class="copy-btn" onclick="copyCode('${id}')">📋 Copy</button><pre>${escHtml(code)}</pre></div><div class="chat-bubble ${role === 'ai' ? 'ai-bubble' : 'user-bubble'}" style="margin-top:4px;">`;
+        } else if (part.trim()) {
+            html += escHtml(part);
+        }
+    });
+
+    html += '</div>';
+    div.innerHTML = html;
+    chat.appendChild(div);
+    scrollChat();
+    return div;
+}
+
+function addTyping() {
+    const chat = document.getElementById('fivemChat');
+    const div = document.createElement('div');
+    div.className = 'typing';
+    div.innerHTML = '▋ AI schrijft...';
+    chat.appendChild(div);
+    scrollChat();
+    return div;
+}
+
+function scrollChat() {
+    const chat = document.getElementById('fivemChat');
+    chat.scrollTop = chat.scrollHeight;
+}
+
+function copyCode(id) {
+    const pre = document.getElementById(id).querySelector('pre');
+    navigator.clipboard.writeText(pre.textContent);
+    showToast('✓ Code gekopieerd!');
+}
+
+function clearChat() {
+    fivemHistory = [];
+    const chat = document.getElementById('fivemChat');
+    chat.innerHTML = '<div class="chat-msg ai"><div class="chat-bubble ai-bubble">👋 Hey! Ik ben je FiveM Lua AI. Kies een modus links en stel je vraag of plak je script!</div></div>';
+}
+
+function escHtml(t) {
+    return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// Enter = verstuur (shift+enter = newline)
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && !e.shiftKey && document.getElementById('fivemPage').style.display !== 'none') {
+        const active = document.activeElement;
+        if (active && active.id === 'fivemInput') {
+            e.preventDefault();
+            sendFivem();
+        }
+    }
+});
+</script>
+
+
+<!-- ROBLOX PAGE -->
+<div id="robloxPage" style="display:none; position:relative; z-index:1; padding:20px; max-width:1100px; margin:0 auto;">
+    <div class="page-header">
+        <button class="btn-back" onclick="showPage('mainContent')">← Back</button>
+        <div class="page-title">🟥 Roblox Scripter AI</div>
+    </div>
+
+    <div style="display:grid; grid-template-columns:260px 1fr; gap:16px; align-items:start;">
+
+        <!-- Sidebar -->
+        <div style="display:flex; flex-direction:column; gap:12px;">
+            <div class="wh-card" style="padding:16px;">
+                <div class="section-label" style="margin-bottom:12px;">Modus</div>
+                <div style="display:flex; flex-direction:column; gap:8px;">
+                    <button class="mode-btn active" id="rbModeGen"   onclick="rbSetMode('gen')">⚡ Genereer Script</button>
+                    <button class="mode-btn"         id="rbModeDebug" onclick="rbSetMode('debug')">🔍 Debug / Fix</button>
+                    <button class="mode-btn"         id="rbModeClean" onclick="rbSetMode('clean')">🧹 Clean Script</button>
+                    <button class="mode-btn"         id="rbModeChat"  onclick="rbSetMode('chat')">💬 Chat / Vragen</button>
+                </div>
+            </div>
+
+            <div class="wh-card" style="padding:16px;" id="rbOptionsPanel">
+                <div class="section-label" style="margin-bottom:12px;">Opties</div>
+                <div class="form-group">
+                    <label>Script Type</label>
+                    <select id="rbTypeSelect" style="width:100%;padding:10px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:white;font-size:13px;outline:none;">
+                        <option>LocalScript</option>
+                        <option>Script (Server)</option>
+                        <option>ModuleScript</option>
+                        <option>RemoteEvent setup</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Game Type</label>
+                    <select id="rbGameSelect" style="width:100%;padding:10px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:white;font-size:13px;outline:none;">
+                        <option>Algemeen</option>
+                        <option>Roleplay (RP)</option>
+                        <option>Obby</option>
+                        <option>Simulator</option>
+                        <option>FPS / Combat</option>
+                        <option>Tycoon</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="wh-card" style="padding:16px;">
+                <div class="section-label" style="margin-bottom:8px;">Chat History</div>
+                <button onclick="rbClearChat()" style="width:100%;padding:8px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--muted);font-size:12px;cursor:pointer;font-family:'JetBrains Mono',monospace;">🗑 Wis gesprek</button>
+            </div>
+        </div>
+
+        <!-- Main -->
+        <div style="display:flex; flex-direction:column; gap:12px;">
+            <div id="robloxChat" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;min-height:420px;max-height:420px;overflow-y:auto;display:flex;flex-direction:column;gap:12px;">
+                <div class="chat-msg ai">
+                    <div class="chat-bubble ai-bubble">🟥 Hey! Ik ben je Roblox Luau AI. Kies een modus en beschrijf wat je wilt bouwen!</div>
+                </div>
+            </div>
+
+            <div class="wh-card" style="padding:16px;">
+                <div class="form-group" id="rbInputGroup">
+                    <label id="rbInputLabel">Beschrijf je script</label>
+                    <textarea id="robloxInput" rows="4" placeholder="bijv. een script dat spelers coins geeft als ze een part aanraken..."></textarea>
+                </div>
+                <div class="form-group" id="rbCodeGroup" style="display:none;">
+                    <label>Plak je Luau code</label>
+                    <textarea id="robloxCode" rows="6" placeholder="-- Plak hier je Luau code..." style="font-family:'JetBrains Mono',monospace; font-size:12px;"></textarea>
+                </div>
+                <button class="btn-send" id="robloxSendBtn" onclick="rbSend()" style="background: #ff4444; color:white;">🟥 Verstuur</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// ── Roblox Scripter ─────────────────────────────────────────
+let rbMode = 'gen';
+let rbHistory = [];
+
+function initRoblox() { rbSetMode('gen'); }
+
+function rbSetMode(mode) {
+    rbMode = mode;
+    ['gen','debug','clean','chat'].forEach(m => {
+        const el = document.getElementById('rbMode' + m.charAt(0).toUpperCase() + m.slice(1));
+        if (el) el.classList.remove('active');
+    });
+    const active = document.getElementById('rbMode' + mode.charAt(0).toUpperCase() + mode.slice(1));
+    if (active) active.classList.add('active');
+
+    const inputLabel = document.getElementById('rbInputLabel');
+    const inputTA    = document.getElementById('robloxInput');
+    const codeGroup  = document.getElementById('rbCodeGroup');
+    const optPanel   = document.getElementById('rbOptionsPanel');
+
+    if (mode === 'gen') {
+        inputLabel.textContent = 'Beschrijf je script';
+        inputTA.placeholder = 'bijv. een script dat spelers coins geeft als ze een part aanraken...';
+        codeGroup.style.display = 'none';
+        optPanel.style.display = 'block';
+    } else if (mode === 'debug') {
+        inputLabel.textContent = 'Beschrijf het probleem (optioneel)';
+        inputTA.placeholder = 'bijv. de RemoteEvent fired niet...';
+        codeGroup.style.display = 'block';
+        optPanel.style.display = 'none';
+    } else if (mode === 'clean') {
+        inputLabel.textContent = 'Extra instructies (optioneel)';
+        inputTA.placeholder = 'bijv. voeg comments toe, gebruik ModuleScripts...';
+        codeGroup.style.display = 'block';
+        optPanel.style.display = 'none';
+    } else if (mode === 'chat') {
+        inputLabel.textContent = 'Stel je vraag';
+        inputTA.placeholder = 'bijv. wat is het verschil tussen LocalScript en Script?';
+        codeGroup.style.display = 'none';
+        optPanel.style.display = 'none';
+    }
+}
+
+function rbBuildSystem() {
+    const scriptType = document.getElementById('rbTypeSelect')?.value || 'LocalScript';
+    const gameType   = document.getElementById('rbGameSelect')?.value || 'Algemeen';
+    return `Je bent een expert Roblox Luau developer. Je schrijft altijd schone, goed gecommentarieerde Luau code voor Roblox Studio.
+Script type voorkeur: ${scriptType}. Game type: ${gameType}.
+Regels:
+- Gebruik correcte Roblox services (Players, ReplicatedStorage, RunService, etc.)
+- Gebruik RemoteEvents/RemoteFunctions voor client-server communicatie
+- Gebruik ModuleScripts voor herbruikbare code
+- Voeg Nederlandse comments toe
+- Geef code terug in een code block met \`\`\`lua ... \`\`\`
+- Wees beknopt maar volledig`;
+}
+
+async function rbSend() {
+    const input  = document.getElementById('robloxInput').value.trim();
+    const code   = document.getElementById('robloxCode')?.value.trim() || '';
+    const btn    = document.getElementById('robloxSendBtn');
+
+    if (!input && !code) { showToast('Vul iets in!', true); return; }
+
+    let userMsg = '';
+    if (rbMode === 'gen')   userMsg = 'Genereer een Roblox Luau script: ' + input;
+    if (rbMode === 'debug') userMsg = 'Debug en fix dit Luau script' + (input ? ': ' + input : '') + ':\n\n' + code;
+    if (rbMode === 'clean') userMsg = 'Clean en optimaliseer dit Luau script' + (input ? '. Extra: ' + input : '') + ':\n\n' + code;
+    if (rbMode === 'chat')  userMsg = input;
+
+    rbAddMessage(userMsg, 'user');
+    rbHistory.push({ role: 'user', content: userMsg });
+
+    btn.textContent = '⏳ Bezig...';
+    btn.disabled = true;
+    const typingEl = rbAddTyping();
+
+    try {
+        const historyToSend = rbHistory.slice(0, -1);
+        const res = await fetch(WORKER_URL + "?type=ai", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                prompt:  userMsg,
+                system:  rbBuildSystem(),
+                history: historyToSend
+            })
+        });
+
+        if (!res.ok) throw new Error('Worker HTTP ' + res.status);
+        const data = await res.json();
+        if (data.error) throw new Error(data.error);
+        const reply = data.content?.[0]?.text || 'Geen antwoord ontvangen.';
+
+        rbHistory.push({ role: 'assistant', content: reply });
+        typingEl.remove();
+        rbAddMessage(reply, 'ai');
+
+        document.getElementById('robloxInput').value = '';
+        if (document.getElementById('robloxCode')) document.getElementById('robloxCode').value = '';
+
+    } catch(e) {
+        typingEl.remove();
+        rbAddMessage('❌ Fout: ' + (e?.message || String(e)), 'ai');
+    } finally {
+        btn.textContent = '🟥 Verstuur';
+        btn.disabled = false;
+        rbScrollChat();
+    }
+}
+
+function rbAddMessage(text, role) {
+    const chat = document.getElementById('robloxChat');
+    const div = document.createElement('div');
+    div.className = 'chat-msg';
+    const codeBlockRe = /(`{3}lua[\s\S]*?`{3}|`{3}[\s\S]*?`{3})/g;
+    const parts = text.split(codeBlockRe);
+    let html = '<div class="chat-bubble ' + (role === 'ai' ? 'ai-bubble' : 'user-bubble') + '">';
+    parts.forEach(part => {
+        if (part.startsWith('`'+'`'+'`')) {
+            const code = part.replace(/`{3}lua[
+]?|`{3}[
+]?/g, '').trim();
+            const id = 'rbcode_' + Math.random().toString(36).slice(2);
+            html += '</div><div class="code-block" id="' + id + '"><button class="copy-btn" onclick="copyCode('' + id + '')">📋 Copy</button><pre>' + escHtml(code) + '</pre></div><div class="chat-bubble ' + (role === 'ai' ? 'ai-bubble' : 'user-bubble') + '" style="margin-top:4px;">';
+        } else if (part.trim()) {
+            html += escHtml(part);
+        }
+    });
+    html += '</div>';
+    div.innerHTML = html;
+    chat.appendChild(div);
+    rbScrollChat();
+    return div;
+}
+
+function rbAddTyping() {
+    const chat = document.getElementById('robloxChat');
+    const div = document.createElement('div');
+    div.className = 'typing';
+    div.innerHTML = '▋ AI schrijft...';
+    chat.appendChild(div);
+    rbScrollChat();
+    return div;
+}
+
+function rbScrollChat() {
+    const chat = document.getElementById('robloxChat');
+    chat.scrollTop = chat.scrollHeight;
+}
+
+function rbClearChat() {
+    rbHistory = [];
+    const chat = document.getElementById('robloxChat');
+    chat.innerHTML = '<div class="chat-msg ai"><div class="chat-bubble ai-bubble">🟥 Hey! Ik ben je Roblox Luau AI. Kies een modus en beschrijf wat je wilt bouwen!</div></div>';
+}
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && !e.shiftKey && document.getElementById('robloxPage').style.display !== 'none') {
+        if (document.activeElement && document.activeElement.id === 'robloxInput') {
+            e.preventDefault();
+            rbSend();
+        }
+    }
+});
+</script>
+
+</body>
+</html>
